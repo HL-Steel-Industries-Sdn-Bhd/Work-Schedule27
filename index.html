@@ -548,7 +548,29 @@
     dragInfo.cells.forEach(c=>c.classList.add('occupied'));
     const merged=document.createElement('div');
     merged.className='assigned-project merged';
-    merged.innerText=dragInfo.projectName;
+    // 新逻辑：根据占据格数来决定显示内容与字体：
+    // - 1 格：只显示括号内的资讯 (如 "(004587-40)")，若无括号则显示完整名称
+    // - 2 格：保持完整名称，不改动
+    // - >=3 格：显示完整名称，并将字体放大 20%
+    const len = dragInfo.cells.length;
+    const fullName = dragInfo.projectName || '';
+    const parenMatch = fullName.match(/\([^\)]+\)/); // 整个括号内容，例如 "(004587-40)"
+    if(len === 1){
+      // 只显示括号内（包括括号），若没有则退回显示完整名称
+      merged.innerText = parenMatch ? parenMatch[0] : fullName;
+      // 使用默认或稍微大的字体以保证可读（保持接近 CSS 默认 13.5px）
+      merged.style.fontSize = '13.5px';
+    } else if(len === 2){
+      // 两格：保持完整名称，使用 CSS 默认字号（不强制设置）
+      merged.innerText = fullName;
+      merged.style.fontSize = ''; // 清除内联字号，使用 CSS
+    } else {
+      // 三格及以上：完整名称，并放大20%
+      merged.innerText = fullName;
+      // CSS 默认是 13.5px；放大20% => 13.5 * 1.2 = 16.2px
+      merged.style.fontSize = (13.5 * 1.2) + 'px';
+    }
+
     merged.dataset.row=row;
     merged.dataset.startCol=startCol;
     merged.dataset.endCol=endCol;
@@ -556,7 +578,6 @@
     if(codeMatch&&projectCodeColorMap[codeMatch[1]]){
       merged.style.background=projectCodeColorMap[codeMatch[1]];
     }
-    if(dragInfo.cells.length===1){merged.style.fontSize='14px';}
     const first=dragInfo.cells[0];
     const last=dragInfo.cells[dragInfo.cells.length-1];
     const firstRect=first.getBoundingClientRect();
@@ -623,12 +644,6 @@
 <!--
   下面是额外注释/空行，用于保证行数不低于你指定版本（不影响任何功能）
 -->
-
-
-
-
-
-
 
 
 
